@@ -17,16 +17,27 @@ app.use(
 );
 
 // CORS configuration
-const allowedOrigins = [
-  process.env.CLIENT_URL || 'http://localhost:5173',
+const defaultOrigins = [
+  'https://miltrack-client.netlify.app',
   'http://localhost:5173',
   'http://127.0.0.1:5173',
 ];
 
+const envOrigins = process.env.CLIENT_URL
+  ? process.env.CLIENT_URL.split(',').map((url) => url.trim().replace(/\/$/, ''))
+  : [];
+
+const allowedOrigins = Array.from(new Set([...defaultOrigins, ...envOrigins]));
+
 app.use(
   cors({
     origin: function (origin, callback) {
-      if (!origin || allowedOrigins.includes(origin)) {
+      if (!origin) return callback(null, true);
+      const cleanOrigin = origin.replace(/\/$/, '');
+      if (
+        allowedOrigins.includes(cleanOrigin) ||
+        cleanOrigin.endsWith('.netlify.app')
+      ) {
         callback(null, true);
       } else {
         callback(null, true); // Dev flexibility
