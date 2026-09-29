@@ -4,14 +4,19 @@ const connectDB = require('./config/db');
 
 const PORT = process.env.PORT || 4000;
 
-// Connect Database and launch server
-const startServer = async () => {
+// Launch server immediately so cloud platforms (Render, Railway) detect the open port and mark service as live
+const startServer = () => {
   try {
-    await connectDB();
     const server = app.listen(PORT, () => {
       console.log(`[MILTRACK Gateway] Server active and listening on port ${PORT}`);
       console.log(`[MILTRACK Gateway] Environment: ${process.env.NODE_ENV || 'development'}`);
+      console.log(`[MILTRACK Gateway] Health check: http://localhost:${PORT}/health`);
       console.log(`[MILTRACK Gateway] API root: http://localhost:${PORT}/api`);
+    });
+
+    // Connect to database asynchronously in the background
+    connectDB().catch((err) => {
+      console.error(`[Database Startup Notice] Initial connect failed: ${err.message}`);
     });
 
     const shutdown = async (signal) => {
